@@ -5,8 +5,8 @@ import json
 #################### CONSTANTS ####################
 MAX_NEW_TOKENS = 512
 MODEL = "meta-llama/Llama-2-7b-chat-hf"
-# PROMPT_SET = "data/prompts/ShareGPT_V3_unfiltered_cleaned_split_top100.json"
-PROMPT_SET = "shareGPT.json"
+PROMPT_SET = "data/prompts/ShareGPT_V3_unfiltered_cleaned_split_top100.json"
+
 ##################################################
 
 ###################### UTILS ######################
@@ -43,15 +43,15 @@ def process_shareGPT_json(file_path):
 prompts = process_shareGPT_json(PROMPT_SET)
 print(prompts)
 
-# model = NanoLLM.from_pretrained(
-#    MODEL,                                    # HuggingFace repo/model name, or path to HF model checkpoint
-#    api='mlc',                                # supported APIs are: mlc, awq, hf
-#    api_token=os.environ['HUGGINFACE_TOKEN'], # HuggingFace API key for authenticated models ($HUGGINGFACE_TOKEN)
-#    quantization='q4f16_ft',                  # q4f16_ft, q4f16_1, q8f16_0 for MLC, or path to AWQ weights
-# )
+model = NanoLLM.from_pretrained(
+   MODEL,                                    # HuggingFace repo/model name, or path to HF model checkpoint
+   api='mlc',                                # supported APIs are: mlc, awq, hf
+   api_token=os.environ['HUGGINFACE_TOKEN'], # HuggingFace API key for authenticated models ($HUGGINGFACE_TOKEN)
+   quantization='q4f16_ft',                  # q4f16_ft, q4f16_1, q8f16_0 for MLC, or path to AWQ weights
+)
 
-# for p in prompts:
-#     response = model.generate(p, max_new_tokens=MAX_NEW_TOKENS)
+for p in prompts:
+    response = model.generate(p, max_new_tokens=MAX_NEW_TOKENS)
 
-#     for token in response:
-#         print(token, end='', flush=True)
+    for token in response:
+        print(token, end='', flush=True)
