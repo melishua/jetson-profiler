@@ -1,4 +1,4 @@
-# from nano_llm import NanoLLM
+from nano_llm import NanoLLM
 import os
 import json
 
@@ -46,7 +46,7 @@ print(prompts)
 model = NanoLLM.from_pretrained(
    MODEL,                                    # HuggingFace repo/model name, or path to HF model checkpoint
    api='mlc',                                # supported APIs are: mlc, awq, hf
-   api_token=os.environ['HUGGINFACE_TOKEN'], # HuggingFace API key for authenticated models ($HUGGINGFACE_TOKEN)
+   api_token=os.environ['HUGGINGFACE_TOKEN'], # HuggingFace API key for authenticated models ($HUGGINGFACE_TOKEN)
    quantization='q4f16_ft',                  # q4f16_ft, q4f16_1, q8f16_0 for MLC, or path to AWQ weights
 )
 
