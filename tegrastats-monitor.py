@@ -63,9 +63,12 @@ def main():
     start_signal = args.start_signal
     end_signal = args.end_signal
     
+    container_id = get_first_container_id()
+    print(f"(first running container ID): {container_id}")
+    
     # Loop until the start signal file is detected
     while True:
-        if check_file_in_container(start_signal):
+        if check_file_in_container(container_id, start_signal):
             print("Start signal detected. Starting tegrastats...")
             logfile = get_logfile_name(logfile)
             run_tegrastats(logfile)
@@ -76,10 +79,10 @@ def main():
 
     # Loop to monitor the end signal
     while True:
-        if check_file_in_container(end_signal):
+        if check_file_in_container(container_id, end_signal):
             print("End signal detected. Stopping tegrastats...")
             stop_tegrastats()
-            cleanup_files(start_signal, end_signal)
+            # cleanup_files(start_signal, end_signal)
             break
         else:
             print("Monitoring for end signal...")

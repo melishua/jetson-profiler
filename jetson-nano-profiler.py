@@ -40,6 +40,14 @@ def process_shareGPT_json(file_path):
     
     return data
 
+def cleanup_files(*files):
+    """Remove specified files."""
+    for file in files:
+        try:
+            os.remove(file)
+            print(f"Removed {file}")
+        except FileNotFoundError:
+            print(f"{file} not found for removal.")
 ###################################################
 
 prompts = process_shareGPT_json(PROMPT_SET)
@@ -51,6 +59,7 @@ model = NanoLLM.from_pretrained(
    api_token=os.environ['HUGGINGFACE_TOKEN'], # HuggingFace API key for authenticated models ($HUGGINGFACE_TOKEN)
    quantization='q4f16_ft',                  # q4f16_ft, q4f16_1, q8f16_0 for MLC, or path to AWQ weights
 )
+cleanup_files(END_SIGNAL)
 
 # Create a file to indicate start of experiment for power monitor
 os.system(f'touch {START_SIGNAL}')
@@ -63,3 +72,4 @@ for p in prompts:
 
 # Create a file to indicate end of experiment for power monitor
 os.system(f'touch {END_SIGNAL}')
+cleanup_files(START_SIGNAL)
