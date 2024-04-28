@@ -1,15 +1,21 @@
 from nano_llm import NanoLLM
 import os
 import json
+import argparse
+import random
+
 
 #################### CONSTANTS ####################
-MAX_NEW_TOKENS = 512
-MODEL = "meta-llama/Llama-2-7b-chat-hf"
-PROMPT_SET = "data/prompts/ShareGPT_V3_unfiltered_cleaned_split_top100.json"
-
-START_SIGNAL = "START_SIGNAL"
-END_SIGNAL = "END_SIGNAL"
-##################################################
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Run a generative model with custom parameters.')
+    parser.add_argument('--max_new_tokens', type=int, default=512, help='Maximum number of new tokens to generate.')
+    parser.add_argument('--model', type=str, default="meta-llama/Llama-2-7b-chat-hf", help='Model identifier on HuggingFace.')
+    parser.add_argument('--prompt_set', type=str, default="data/prompts/ShareGPT_V3_unfiltered_cleaned_split_top100.json", help='Path to the JSON file with prompts.')
+    parser.add_argument('--start_signal', type=str, default="START_SIGNAL", help='Filename to signal the start of the experiment.')
+    parser.add_argument('--end_signal', type=str, default="END_SIGNAL", help='Filename to signal the end of the experiment.')
+    parser.add_argument('--num_iterations', type=int, default=100, help='Number of times to repeat the prompt experiment.')
+    parser.add_argument('--num_requests_sample', type=int, default=0, help='Number of prompts to use from the set; 0 means use all.')
+    return parser.parse_args()
 
 ###################### UTILS ######################
 def process_shareGPT_json(file_path):
@@ -50,26 +56,38 @@ def cleanup_files(*files):
             print(f"{file} not found for removal.")
 ###################################################
 
-prompts = process_shareGPT_json(PROMPT_SET)
-print(prompts)
+def main():
+    args = parse_arguments()
 
-model = NanoLLM.from_pretrained(
-   MODEL,                                    # HuggingFace repo/model name, or path to HF model checkpoint
-   api='mlc',                                # supported APIs are: mlc, awq, hf
-   api_token=os.environ['HUGGINGFACE_TOKEN'], # HuggingFace API key for authenticated models ($HUGGINGFACE_TOKEN)
-   quantization='q4f16_ft',                  # q4f16_ft, q4f16_1, q8f16_0 for MLC, or path to AWQ weights
-)
-cleanup_files(END_SIGNAL)
+    # Get the prompts
+    prompts = process_shareGPT_json(args.prompt_set)
+    print(prompts)
+    
+    prompts = process_shareGPT_json(args.prompt_set)
+    if args.num_requests_sample > 0:
+        prompts = random.sample(prompts, min(args.num_requests_sample, len(prompts)))
+    # print(prompts)
 
-# Create a file to indicate start of experiment for power monitor
-os.system(f'touch {START_SIGNAL}')
+    # Load the model
+    model = NanoLLM.from_pretrained(
+        args.model,
+        api='mlc',
+        api_token=os.environ['HUGGINGFACE_TOKEN'],
+        quantization='q4f16_ft',
+    )
+    cleanup_files(args.end_signal)
 
-for p in prompts:
-    response = model.generate(p, max_new_tokens=MAX_NEW_TOKENS)
+    os.system(f'touch {args.start_signal}')
 
-    for token in response:
-        print(token, end='', flush=True)
+    # Run the prompt experiment for the specified number of iterations
+    for _ in range(args.num_iterations):
+        for p in prompts:
+            response = model.generate(p, max_new_tokens=args.max_new_tokens)
+            for token in response:
+                print(token, end='', flush=True)
 
-# Create a file to indicate end of experiment for power monitor
-os.system(f'touch {END_SIGNAL}')
-cleanup_files(START_SIGNAL)
+    os.system(f'touch {args.end_signal}')
+    cleanup_files(args.start_signal)
+
+if __name__ == "__main__":
+    main()
