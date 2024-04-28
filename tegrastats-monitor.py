@@ -13,9 +13,9 @@ import argparse
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Monitor signals to start and stop tegrastats.")
-    parser.add_argument("start_signal", default="~/jetson-containers/data/benchmarks/START_SIGNAL", help="File name for the start signal.")
-    parser.add_argument("end_signal", default="~/jetson-containers/data/benchmarks/end_signal", help="File name for the end signal.")
-    parser.add_argument("logfile", default="tegrastats.log", help="Base file name for the logfile.")
+    parser.add_argument("--start_signal", default="~/jetson-containers/data/benchmarks/START_SIGNAL", help="File name for the start signal.")
+    parser.add_argument("--end_signal", default="~/jetson-containers/data/benchmarks/end_signal", help="File name for the end signal.")
+    parser.add_argument("--logfile", default="tegrastats.log", help="Base file name for the logfile.")
     return parser.parse_args()
 
 def get_logfile_name(base_name):
