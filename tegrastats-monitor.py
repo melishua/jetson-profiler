@@ -23,7 +23,7 @@ def run_helper_script(command, *args):
     cmd = ['./util/check_file_in_docker_container.sh', command] + list(args)
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        raise Exception(f"Command failed: {' '.join(cmd)}\n{result.stderr}")
+        return None
     return result.stdout.strip()
 
 def get_first_container_id():
@@ -65,6 +65,11 @@ def main():
     
     container_id = get_first_container_id()
     print(f"(first running container ID): {container_id}")
+    if container_id is None:
+        print("No running containers found.")
+        print("Start jetson-container first.")
+        print("Bye!")
+        return
     
     # Loop until the start signal file is detected
     while True:
