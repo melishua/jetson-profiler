@@ -7,6 +7,8 @@ MAX_NEW_TOKENS = 512
 MODEL = "meta-llama/Llama-2-7b-chat-hf"
 PROMPT_SET = "data/prompts/ShareGPT_V3_unfiltered_cleaned_split_top100.json"
 
+START_SIGNAL = "START_SIGNAL"
+END_SIGNAL = "END_SIGNAL"
 ##################################################
 
 ###################### UTILS ######################
@@ -50,8 +52,14 @@ model = NanoLLM.from_pretrained(
    quantization='q4f16_ft',                  # q4f16_ft, q4f16_1, q8f16_0 for MLC, or path to AWQ weights
 )
 
+# Create a file to indicate start of experiment for power monitor
+os.system(f'touch {START_SIGNAL}')
+
 for p in prompts:
     response = model.generate(p, max_new_tokens=MAX_NEW_TOKENS)
 
     for token in response:
         print(token, end='', flush=True)
+
+# Create a file to indicate end of experiment for power monitor
+os.system(f'touch {END_SIGNAL}')
