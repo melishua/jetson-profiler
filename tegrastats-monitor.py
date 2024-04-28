@@ -15,7 +15,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Monitor signals to start and stop tegrastats.")
     parser.add_argument("--start_signal", default="START_SIGNAL", help="File name for the start signal.")
     parser.add_argument("--end_signal", default="END_SIGNAL", help="File name for the end signal.")
-    parser.add_argument("--logfile", default="tegrastats.log", help="Base file name for the logfile.")
+    parser.add_argument("--logfile", default="tegrastats", help="Base file name for the logfile.")
     return parser.parse_args()
 
 def run_helper_script(command, *args):
@@ -38,7 +38,7 @@ def check_file_in_container(container_id, file_path):
 def get_logfile_name(base_name):
     """Generate a logfile name with a timestamp if the logfile already exists."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return f"{base_name}_{timestamp}.txt" if os.path.exists(f"{base_name}.txt") else f"{base_name}.txt"
+    return f"{base_name}_{timestamp}.log" if os.path.exists(f"{base_name}.log") else f"{base_name}.log"
 
 def run_tegrastats(logfile):
     """Start the tegrastats daemon process."""
