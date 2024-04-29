@@ -19,6 +19,7 @@ def parse_arguments():
     parser.add_argument('--num_prompt_per_iteration', type=int, default=0, help='Number of prompts to use in each iteration from the selected prompt set; 0 means use all.')
     parser.add_argument('--random_seed', type=int, default=37, help='Random seed for reproducibility.')
     parser.add_argument('--disable_streaming', action="store_true", help='Disable streaming generated result.')
+    parser.add_argument('--max_input_token_length', type=int, default=1000, help='Maximum input token length for the model.')
     return parser.parse_args()
 
 ###################### UTILS ######################
@@ -47,8 +48,9 @@ def process_shareGPT_json(file_path):
         # Process the conversations to get the first two "human" messages
         processed_data = []
         for entry in data:
-            human_messages = [conv['value'] for conv in entry['conversations'] if conv['from'] == 'human'][:2]
-            processed_data.extend(human_messages)
+            if len(entry['conversations']) >= 2:
+                human_messages = [conv['value'] for conv in entry['conversations'] if conv['from'] == 'human'][:2]
+                processed_data.extend(human_messages)
         
         # Save the processed data to cache file
         with open(cache_path, 'w') as cache_file:
@@ -57,6 +59,22 @@ def process_shareGPT_json(file_path):
         data = processed_data
     
     return data
+
+def parse_shareGPT_data(data, model, max_input_length):
+    filtered_data = []
+    for d in data:
+        # Tokenize the prompt
+        prompt_tokens = model.tokenize(d).input_ids
+        
+        # Filter out too long or too short sequences
+        if len(prompt_tokens) < 4 or len(prompt_tokens) > max_input_length:
+            print(f"filtered out prompt with length {len(prompt_tokens)}")
+            continue
+        # TODO: maybe also filter on GPT's response token length as @Edwin's repo
+        else:
+            filtered_data.append(d)
+    
+    return filtered_data
 
 def cleanup_files(*files):
     """Remove specified files."""
@@ -77,6 +95,7 @@ def main():
 
     # Get the prompts
     prompts = process_shareGPT_json(args.prompt_set)
+    prompts = parse_shareGPT_data(prompts, model, args.max_input_token_length)
     if args.num_prompt_samples > 0:
         random.seed(args.random_seed)
         prompts = random.sample(prompts, min(args.num_prompt_samples, len(prompts)))
