@@ -72,6 +72,7 @@ def main():
         return
     
     # Loop until the start signal file is detected
+    counter = 600
     while True:
         if check_file_in_container(container_id, start_signal):
             print("Start signal detected. Starting tegrastats...")
@@ -81,17 +82,35 @@ def main():
         else:
             print("Waiting for start signal...")
             time.sleep(1)  # Check every 1 seconds
+            counter -= 1
+        
+        if counter == 0:
+            print("Start signal not detected after 10min...")
+            print("Please start the experiment!")
+            print("Exiting for now...")
+            print("Bye!")
+            return
 
     # Loop to monitor the end signal
-    while True:
-        if check_file_in_container(container_id, end_signal):
-            print("End signal detected. Stopping tegrastats...")
-            stop_tegrastats()
-            # cleanup_files(start_signal, end_signal)
-            break
-        else:
-            print("Monitoring for end signal...")
-            time.sleep(5)  # Check every 5 seconds
-
+    try:
+        print_counter = 0
+        while True:
+            if check_file_in_container(container_id, end_signal):
+                print("End signal detected. Stopping tegrastats...")
+                stop_tegrastats()
+                # cleanup_files(start_signal, end_signal)
+                break
+            else:
+                if print_counter % 12 == 0:
+                    print_counter = 0
+                    print("Monitoring for end signal...")
+                time.sleep(5)  # Check every 5 seconds
+                print_counter += 1
+    except Exception as e:
+        print(f"Exception: {e}")
+        print("Stopping tegrastats...")
+        stop_tegrastats()
+        print("Exiting for now...")
+        print("Bye!")
 if __name__ == "__main__":
     main()
