@@ -4,6 +4,7 @@ import json
 import argparse
 import random
 from datetime import datetime
+from termcolor import cprint
 
 #################### CONSTANTS ####################
 def parse_arguments():
@@ -14,7 +15,10 @@ def parse_arguments():
     parser.add_argument('--start_signal', type=str, default="START_SIGNAL", help='Filename to signal the start of the experiment.')
     parser.add_argument('--end_signal', type=str, default="END_SIGNAL", help='Filename to signal the end of the experiment.')
     parser.add_argument('--num_iterations', type=int, default=100, help='Number of times to repeat the prompt experiment.')
-    parser.add_argument('--num_requests_sample', type=int, default=0, help='Number of prompts to use from the set; 0 means use all.')
+    parser.add_argument('--num_prompt_samples', type=int, default=0, help='Number of prompts to use from the set; 0 means use all.')
+    parser.add_argument('--num_prompt_per_iteration', type=int, default=0, help='Number of prompts to use in each iteration from the selected prompt set; 0 means use all.')
+    parser.add_argument('--random_seed', type=int, default=37, help='Random seed for reproducibility.')
+    parser.add_argument('--disable_streaming', action="store_true", help='Disable streaming generated result.')
     return parser.parse_args()
 
 ###################### UTILS ######################
@@ -72,8 +76,9 @@ def main():
     print(prompts)
     
     prompts = process_shareGPT_json(args.prompt_set)
-    if args.num_requests_sample > 0:
-        prompts = random.sample(prompts, min(args.num_requests_sample, len(prompts)))
+    if args.num_prompt_samples > 0:
+        random.seed(args.random_seed)
+        prompts = random.sample(prompts, min(args.num_prompt_samples, len(prompts)))
     # print(prompts)
 
     # Load the model
@@ -89,16 +94,24 @@ def main():
 
     # Run the prompt experiment for the specified number of iterations
     try:
+        print("Starting NanoLLM profiling experiment:")
+        print(f"    Number of prompts: {len(prompts)}")
+        print(f"    Number of iterations: {args.num_iterations}")
         for i in range(args.num_iterations):
             # Data collection
             print(f"{TIME()}: Starting iteration {i}")
             num_input_tokens = 0
             num_output_tokens = 0
             
-            for p in prompts:
+            for p_idx, p in enumerate(prompts):
+                cprint(f'>> PROMPT ({p_idx}/{len(prompts)}): ', 'blue' , end='', flush=True)
                 response = model.generate(p, max_new_tokens=args.max_new_tokens)
-                for token in response:
-                    print(token, end='', flush=True)
+                if args.disable_streaming:
+                    cprint(response, 'green')
+                else:
+                    for token in response:
+                        cprint(token, 'green', end='', flush=True)
+
             print(f"model stats= {model.stats}")
             # Stats for this prompt set
             # print(f"Number of input tokens: {num_input_tokens}")
