@@ -31,7 +31,7 @@ def TIME():
     """ Returns the current time. """
     return datetime.now().strftime("%-I:%M %p")
 
-def process_shareGPT_json(file_path):
+def process_shareGPT_json(file_path, model, max_input_length):
     cache_path = file_path.replace('.json', '.cache')
     
     # Check if cache file exists
@@ -52,11 +52,12 @@ def process_shareGPT_json(file_path):
                 human_messages = [conv['value'] for conv in entry['conversations'] if conv['from'] == 'human'][:2]
                 processed_data.extend(human_messages)
         
+        # Filter out promptes based on requirements
+        data = parse_shareGPT_data(processed_data, model, max_input_length)
+        
         # Save the processed data to cache file
         with open(cache_path, 'w') as cache_file:
             json.dump(processed_data, cache_file, indent=4)
-        
-        data = processed_data
     
     return data
 
@@ -102,8 +103,7 @@ def main():
     )
     
     # Get the prompts
-    prompts = process_shareGPT_json(args.prompt_set)
-    prompts = parse_shareGPT_data(prompts, model, args.max_input_token_length)
+    prompts = process_shareGPT_json(args.prompt_set, model, args.max_input_token_length)
     if args.num_prompt_samples > 0:
         random.seed(args.random_seed)
         prompts = random.sample(prompts, min(args.num_prompt_samples, len(prompts)))
