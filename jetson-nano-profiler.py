@@ -73,13 +73,10 @@ def main():
 
     # Get the prompts
     prompts = process_shareGPT_json(args.prompt_set)
-    print(prompts)
-    
-    prompts = process_shareGPT_json(args.prompt_set)
     if args.num_prompt_samples > 0:
         random.seed(args.random_seed)
         prompts = random.sample(prompts, min(args.num_prompt_samples, len(prompts)))
-    # print(prompts)
+    print(prompts)
 
     # Load the model
     model = NanoLLM.from_pretrained(
@@ -104,7 +101,7 @@ def main():
             num_output_tokens = 0
             
             for p_idx, p in enumerate(prompts):
-                cprint(f'>> PROMPT ({p_idx}/{len(prompts)}): ', 'blue' , end='', flush=True)
+                cprint(f'>> PROMPT ({p_idx+1}/{len(prompts)}): {p}\n', 'blue' , end='', flush=True)
                 response = model.generate(p, max_new_tokens=args.max_new_tokens)
                 if args.disable_streaming:
                     cprint(response, 'green')
