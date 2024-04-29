@@ -88,7 +88,6 @@ def main():
         api='mlc',
         api_token=os.environ['HUGGINGFACE_TOKEN'],
         quantization='q4f16_ft',
-        streaming=not args.disable_streaming,
     )
     cleanup_files(args.end_signal)
 
@@ -107,7 +106,9 @@ def main():
             
             for p_idx, p in enumerate(prompts):
                 cprint(f'>> PROMPT ({p_idx+1}/{len(prompts)}): {p}\n', 'blue' , end='', flush=True)
-                response = model.generate(p, max_new_tokens=args.max_new_tokens)
+                response = model.generate(p, 
+                                          max_new_tokens=args.max_new_tokens,
+                                          streaming=not args.disable_streaming)
                 if args.disable_streaming:
                     cprint(response, 'green')
                 else:
