@@ -1,4 +1,4 @@
-from nano_llm import NanoLLM, bot_function
+from nano_llm import NanoLLM
 import os
 import json
 import argparse
