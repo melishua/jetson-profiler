@@ -93,6 +93,14 @@ def cleanup(start_signal, end_signal):
 def main():
     args = parse_arguments()
 
+    # Load the model
+    model = NanoLLM.from_pretrained(
+        args.model,
+        api='mlc',
+        api_token=os.environ['HUGGINGFACE_TOKEN'],
+        quantization='q4f16_ft',
+    )
+    
     # Get the prompts
     prompts = process_shareGPT_json(args.prompt_set)
     prompts = parse_shareGPT_data(prompts, model, args.max_input_token_length)
@@ -101,13 +109,6 @@ def main():
         prompts = random.sample(prompts, min(args.num_prompt_samples, len(prompts)))
     print(prompts)
 
-    # Load the model
-    model = NanoLLM.from_pretrained(
-        args.model,
-        api='mlc',
-        api_token=os.environ['HUGGINGFACE_TOKEN'],
-        quantization='q4f16_ft',
-    )
     cleanup_files(args.end_signal)
 
     os.system(f'touch {args.start_signal}')
