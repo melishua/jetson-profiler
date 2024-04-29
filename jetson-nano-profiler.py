@@ -80,11 +80,16 @@ def main():
     os.system(f'touch {args.start_signal}')
 
     # Run the prompt experiment for the specified number of iterations
-    for _ in range(args.num_iterations):
-        for p in prompts:
-            response = model.generate(p, max_new_tokens=args.max_new_tokens)
-            for token in response:
-                print(token, end='', flush=True)
+    try:
+        for i in range(args.num_iterations):
+            for p in prompts:
+                response = model.generate(p, max_new_tokens=args.max_new_tokens)
+                for token in response:
+                    print(token, end='', flush=True)
+    except Exception as e:
+        print(f"Exception: {e}")
+        print(f"Currently at iteration {i}/{args.num_iterations}.")
+        print(f"Stopping the experiment now, bye!")
 
     os.system(f'touch {args.end_signal}')
     cleanup_files(args.start_signal)
