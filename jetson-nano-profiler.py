@@ -64,7 +64,7 @@ def parse_shareGPT_data(data, model, max_input_length):
     filtered_data = []
     for d in data:
         # Tokenize the prompt
-        prompt_tokens = model.tokenize(d).input_ids
+        prompt_tokens = model.tokenize(d)[0]
         
         # Filter out too long or too short sequences
         if len(prompt_tokens) < 4 or len(prompt_tokens) > max_input_length:
