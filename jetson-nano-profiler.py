@@ -99,7 +99,7 @@ def main():
                 response = model.generate(p, max_new_tokens=args.max_new_tokens)
                 for token in response:
                     print(token, end='', flush=True)
-            print(f"model stats= {model.stats()}")
+            print(f"model stats= {model.stats}")
             # Stats for this prompt set
             # print(f"Number of input tokens: {num_input_tokens}")
             # print(f"Number of output tokens: {num_output_tokens}")        
