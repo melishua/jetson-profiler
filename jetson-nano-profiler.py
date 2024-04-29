@@ -88,6 +88,7 @@ def main():
         api='mlc',
         api_token=os.environ['HUGGINGFACE_TOKEN'],
         quantization='q4f16_ft',
+        streaming=not args.disable_streaming,
     )
     cleanup_files(args.end_signal)
 
