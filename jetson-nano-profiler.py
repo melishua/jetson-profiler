@@ -18,12 +18,10 @@ def parse_arguments():
     return parser.parse_args()
 
 ###################### UTILS ######################
-@bot_function
 def DATE():
     """ Returns the current date. """
     return datetime.now().strftime("%A, %B %-m %Y")
    
-@bot_function
 def TIME():
     """ Returns the current time. """
     return datetime.now().strftime("%-I:%M %p")
