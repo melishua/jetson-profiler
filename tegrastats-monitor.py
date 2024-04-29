@@ -106,6 +106,12 @@ def main():
                     print("Monitoring for end signal...")
                 time.sleep(5)  # Check every 5 seconds
                 print_counter += 1
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt detected.")
+        print("Stopping tegrastats...")
+        stop_tegrastats()
+        print("Exiting for now...")
+        print("Bye!")
     except Exception as e:
         print(f"Exception: {e}")
         print("Stopping tegrastats...")

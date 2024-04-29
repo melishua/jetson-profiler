@@ -66,6 +66,10 @@ def cleanup_files(*files):
             print(f"Removed {file}")
         except FileNotFoundError:
             print(f"{file} not found for removal.")
+            
+def cleanup(start_signal, end_signal):
+    os.system(f'touch {end_signal}')
+    cleanup_files(start_signal)
 ###################################################
 
 def main():
@@ -113,14 +117,20 @@ def main():
             # Stats for this prompt set
             # print(f"Number of input tokens: {num_input_tokens}")
             # print(f"Number of output tokens: {num_output_tokens}")        
-            
+    except KeyboardInterrupt:
+        print("Experiment interrupted by user.")
+        print(f"Stopped at iteration {i}/{args.num_iterations}.")
+        cleanup(args.start_signal, args.end_signal)
+        print("Exiting the experiment, bye!")
     except Exception as e:
         print(f"Exception: {e}")
         print(f"Stopped at iteration {i}/{args.num_iterations}.")
-        print(f"Exiting the experiment, bye!")
+        cleanup(args.start_signal, args.end_signal)
+        print("Exiting the experiment, bye!")
 
-    os.system(f'touch {args.end_signal}')
-    cleanup_files(args.start_signal)
+    cleanup(args.start_signal, args.end_signal)
+    print("Experiment completed :D")
+    print("Bye!")
 
 if __name__ == "__main__":
     main()
