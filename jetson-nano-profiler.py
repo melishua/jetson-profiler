@@ -57,7 +57,7 @@ def process_shareGPT_json(file_path, model, max_input_length):
         
         # Save the processed data to cache file
         with open(cache_path, 'w') as cache_file:
-            json.dump(processed_data, cache_file, indent=4)
+            json.dump(data, cache_file, indent=4)
     
     return data
 
