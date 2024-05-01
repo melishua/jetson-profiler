@@ -16,6 +16,7 @@ def parse_arguments():
     parser.add_argument("--start_signal", default="START_SIGNAL", help="File name for the start signal.")
     parser.add_argument("--end_signal", default="END_SIGNAL", help="File name for the end signal.")
     parser.add_argument("--logfile", default="tegrastats", help="Base file name for the logfile.")
+    parser.add_argument("--big_sleep", type=int, default=2100, help="Number of seconds to wait for the end signal.")
     return parser.parse_args()
 
 def run_helper_script(command, *args):
@@ -93,6 +94,13 @@ def main():
 
     # Loop to monitor the end signal
     try:
+        # Experiment usually takes a long whlie to run, since jetson nano
+        # is quite limited, let's have a long sleep before checking for
+        # the end signal
+        print(f"Sleeping for {args.big_sleep} seconds...")
+        time.sleep(args.big_sleep)
+        
+        # Wait for the end signal
         print_counter = 0
         while True:
             if check_file_in_container(container_id, end_signal):
