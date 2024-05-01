@@ -78,7 +78,7 @@ def parse_shareGPT_data(data, model, max_input_length):
         # Filter out too long or too short sequences
         if prompt_token_count < 4 or prompt_token_count > max_input_length or \
            gen_token_count < 4 or gen_token_count > max_input_length:
-            print(f"filtered out prompt with length {prompt_token_count}")
+            print(f"filtered out prompt with length {prompt_token_count} or output with length {gen_token_count}")
             continue
         else:
             filtered_data.append({"prompt": d['human'], "token_count": prompt_token_count})
