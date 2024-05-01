@@ -3,10 +3,13 @@ import os
 import json
 import argparse
 import random
+import time
 from datetime import datetime
 from termcolor import cprint
 
 #################### CONSTANTS ####################
+TEMP_FILE = "generated.txt"
+###################################################
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Run a generative model with custom parameters.')
     parser.add_argument('--max_new_tokens', type=int, default=500, help='Maximum number of new tokens to generate.')
@@ -66,16 +69,19 @@ def parse_shareGPT_data(data, model, max_input_length):
     for d in data:
         # Tokenize the prompt
         prompt_tokens = model.tokenize(d)[0]
+        token_count = len(prompt_tokens)
         
         # Filter out too long or too short sequences
-        if len(prompt_tokens) < 4 or len(prompt_tokens) > max_input_length:
-            print(f"filtered out prompt with length {len(prompt_tokens)}")
+        if token_count < 4 or token_count > max_input_length:
+            print(f"filtered out prompt with length {token_count}")
             continue
         # TODO: maybe also filter on GPT's response token length as @Edwin's repo
         else:
-            filtered_data.append(d)
+            filtered_data.append({"prompt": d, "token_count": token_count})
     
     return filtered_data
+
+
 
 def cleanup_files(*files):
     """Remove specified files."""
@@ -111,9 +117,12 @@ def main():
 
     cleanup_files(args.end_signal)
 
+    # Signal the start of the experiment
     os.system(f'touch {args.start_signal}')
+    os.system(f'touch {TEMP_FILE}')
 
     # Run the prompt experiment for the specified number of iterations
+    start_time = time.time()
     try:
         print("Starting NanoLLM profiling experiment:")
         print(f"    Number of prompts: {len(prompts)}")
@@ -122,23 +131,28 @@ def main():
             # Data collection
             print(f"{TIME()}: Starting iteration {i}")
             num_input_tokens = 0
-            num_output_tokens = 0
             
             for p_idx, p in enumerate(prompts):
-                cprint(f'>> PROMPT ({p_idx+1}/{len(prompts)}): {p}\n', 'blue' , end='', flush=True)
-                response = model.generate(p, 
+                prompt = p['prompt']
+                num_input_tokens += p['token_count']
+                cprint(f'>> PROMPT ({p_idx+1}/{len(prompts)}): {prompt}\n', 'blue' , end='', flush=True)
+                response = model.generate(prompt, 
                                           max_new_tokens=args.max_new_tokens,
                                           streaming=not args.disable_streaming)
-                if args.disable_streaming:
-                    cprint(response, 'green')
-                else:
-                    for token in response:
-                        cprint(token, 'green', end='', flush=True)
+                with open(TEMP_FILE, "a") as f:
+                    if args.disable_streaming:
+                        cprint(response, 'green')
+                        f.write(f"{response}\n")
+                    else:
+                        for token in response:
+                            cprint(token, 'green', end='', flush=True)
+                            f.write(f"{token}")
+                        f.write(f"\n")
 
             print(f"model stats= {model.stats}")
             # Stats for this prompt set
             # print(f"Number of input tokens: {num_input_tokens}")
-            # print(f"Number of output tokens: {num_output_tokens}")        
+            # print(f"Number of output tokens: {num_output_tokens}")
     except KeyboardInterrupt:
         print("Experiment interrupted by user.")
         print(f"Stopped at iteration {i}/{args.num_iterations}.")
@@ -150,7 +164,28 @@ def main():
         cleanup(args.start_signal, args.end_signal)
         print("Exiting the experiment, bye!")
 
+    # Signal end of experiment for tegrastats to stop monitoring
+    end_time = time.time()
     cleanup(args.start_signal, args.end_signal)
+
+    # Get stats of the generated text
+    num_output_tokens = 0
+    with open(TEMP_FILE, "r") as f:
+        for line in f:
+            out_tokens = model.tokenize(line)[0]
+            num_output_tokens += len(out_tokens)
+        
+    if os.path.exists(TEMP_FILE):
+        os.remove(TEMP_FILE)
+
+    print("*****************************************************")
+    print("End of experiments.")
+    print(f"model stats= {model.stats}")
+    print(f"Number of input tokens: {num_input_tokens}")
+    print(f"Number of output tokens: {num_output_tokens}")
+    print(f"Total execution time: {end_time - start_time:.4f} seconds")
+    print("*****************************************************")
+
     print("Experiment completed :D")
     print("Bye!")
 
