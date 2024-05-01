@@ -34,6 +34,7 @@ def TIME():
     """ Returns the current time. """
     return datetime.now().strftime("%-I:%M %p")
 
+# FIXME: now cached version would not care max_input_length.
 def process_shareGPT_json(file_path, model, max_input_length):
     cache_path = file_path.replace('.json', '.cache')
     
@@ -48,12 +49,13 @@ def process_shareGPT_json(file_path, model, max_input_length):
         with open(file_path, 'r') as json_file:
             data = json.load(json_file)
         
-        # Process the conversations to get the first two "human" messages
+        # Process the conversations to get the first two round of conversations
         processed_data = []
         for entry in data:
-            if len(entry['conversations']) >= 2:
-                human_messages = [conv['value'] for conv in entry['conversations'] if conv['from'] == 'human'][:2]
-                processed_data.extend(human_messages)
+            conversations = entry['conversations']
+            if len(conversations) >= 4:
+                conversation_pairs = [{'human': conversations[i]['value'], 'gpt': conversations[i+1]['value']} for i in range(0, 4, 2)]
+                processed_data.extend(conversation_pairs)
         
         # Filter out promptes based on requirements
         data = parse_shareGPT_data(processed_data, model, max_input_length)
@@ -68,16 +70,18 @@ def parse_shareGPT_data(data, model, max_input_length):
     filtered_data = []
     for d in data:
         # Tokenize the prompt
-        prompt_tokens = model.tokenize(d)[0]
-        token_count = len(prompt_tokens)
+        prompt_tokens = model.tokenize(d['human'])[0]
+        prompt_token_count = len(prompt_tokens)
+        gen_tokens = model.tokenize(d['gpt'])[0]
+        gen_token_count = len(gen_tokens)
         
         # Filter out too long or too short sequences
-        if token_count < 4 or token_count > max_input_length:
-            print(f"filtered out prompt with length {token_count}")
+        if prompt_token_count < 4 or prompt_token_count > max_input_length or \
+           gen_token_count < 4 or gen_token_count > max_input_length:
+            print(f"filtered out prompt with length {prompt_token_count}")
             continue
-        # TODO: maybe also filter on GPT's response token length as @Edwin's repo
         else:
-            filtered_data.append({"prompt": d, "token_count": token_count})
+            filtered_data.append({"prompt": d['human'], "token_count": prompt_token_count})
     
     return filtered_data
 
@@ -133,6 +137,7 @@ def main():
             num_input_tokens = 0
             
             for p_idx, p in enumerate(prompts):
+                print("")
                 prompt = p['prompt']
                 num_input_tokens += p['token_count']
                 cprint(f'>> PROMPT ({p_idx+1}/{len(prompts)}): {prompt}\n', 'blue' , end='', flush=True)
