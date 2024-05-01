@@ -54,7 +54,18 @@ def process_shareGPT_json(file_path, model, max_input_length):
         for entry in data:
             conversations = entry['conversations']
             if len(conversations) >= 4:
-                conversation_pairs = [{'human': conversations[i]['value'], 'gpt': conversations[i+1]['value']} for i in range(0, 4, 2)]
+                conversation_pairs = []
+                for i in range(0, 4, 2):
+                    # Ensure there's a valid pair
+                    if i+1 < len(conversations):
+                        pair = {}
+                        if conversations[i]['from'] == 'human':
+                            pair['human'] = conversations[i]['value']
+                            pair['gpt'] = conversations[i+1]['value']
+                        else:
+                            pair['gpt'] = conversations[i]['value']
+                            pair['human'] = conversations[i+1]['value']
+                        conversation_pairs.append(pair)
                 processed_data.extend(conversation_pairs)
         
         # Filter out promptes based on requirements
