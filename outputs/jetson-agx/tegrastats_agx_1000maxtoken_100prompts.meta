@@ -1,0 +1,8 @@
+*****************************************************
+End of experiments.
+model stats= {'embed_time': 0.00019321800027682912, 'input_tokens': 13, 'output_tokens': 521, 'prefill_time': 0.016976724999040016, 'prefill_rate': 765.754290108081, 'decode_time': 32.71957573600048, 'decode_rate': 15.923189353178488}
+Number of input tokens: 9449
+Number of output tokens: 66450
+Total execution time: 3974.4063 seconds
+*****************************************************
+
